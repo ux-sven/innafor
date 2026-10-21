@@ -11,7 +11,7 @@ export interface CoverFlowItem {
 export interface CoverFlowSettings {
   /** `coverflow` = flat row with angled sides, `ring` = covers travel around a horizontal 3D circle. */
   mode: 'coverflow' | 'ring';
-  /** Ring: how tightly the covers sit around the circle (1 = edge to edge, lower = more overlap). */
+  /** Ring: space between neighbouring covers (1 = edge to edge, higher = more gap). Never below 1, so covers never intersect. */
   ringSpacing: number;
   /** Ring: minimum radius as a fraction of the available width (wider = more spread). */
   ringWidth: number;
@@ -54,9 +54,9 @@ export interface CoverFlowSettings {
 
 export const defaultCoverFlowSettings: CoverFlowSettings = {
   mode: 'coverflow',
-  ringSpacing: 0.85,
+  ringSpacing: 1.04,
   ringWidth: 0.45,
-  ringTilt: 6,
+  ringTilt: 4,
   ringSizeRatio: [0.46, 0.22],
   rotation: 45,
   centerGap: 0.72,
@@ -124,7 +124,10 @@ export function CoverFlow({
 
   // Ring geometry
   const step = 360 / Math.max(count, 1);
-  const radius = Math.max(size * 1.1, width * s.ringWidth, (size * count * s.ringSpacing) / (2 * Math.PI));
+  // Minimum radius where neighbouring covers sit edge to edge without cutting into each other
+  // (the apothem of a regular polygon with `count` sides of length `size`).
+  const minRingRadius = (size * Math.max(1, s.ringSpacing)) / (2 * Math.tan(Math.PI / Math.max(count, 3)));
+  const radius = Math.max(minRingRadius, width * s.ringWidth);
   const tiltRad = (s.ringTilt * Math.PI) / 180;
   const ringLift = Math.round(radius * Math.sin(tiltRad) * 0.8); // room for the back of the ring
   const coverTop = isRing ? 12 + ringLift : 12;
