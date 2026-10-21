@@ -68,7 +68,7 @@ export const defaultCoverFlowSettings: CoverFlowSettings = {
   reflectionOpacity: 0.3,
   reflectionHeight: 0.35,
   duration: 600,
-  autoplay: 10000,
+  autoplay: 6000,
   autoplaySpeed: 0,
   loop: false,
   sizeRatio: [0.58, 0.3],
@@ -129,7 +129,7 @@ export function CoverFlow({
   const minRingRadius = (size * Math.max(1, s.ringSpacing)) / (2 * Math.tan(Math.PI / Math.max(count, 3)));
   const radius = Math.max(minRingRadius, width * s.ringWidth);
   const tiltRad = (s.ringTilt * Math.PI) / 180;
-  const ringLift = Math.round(radius * Math.sin(tiltRad) * 0.8); // room for the back of the ring
+  const ringLift = Math.round(radius * Math.sin(tiltRad) * 2 + 40); // generous room above for the back of the ring
   const coverTop = isRing ? 12 + ringLift : 12;
 
   // Continuous rotation counter so the ring always turns the short way, also across the seam
@@ -303,9 +303,12 @@ export function CoverFlow({
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerCancel={() => (drag.current = null)}
-        className="relative w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[#E5B87E] rounded-[10px] select-none touch-pan-y"
+        className="relative w-full outline-none focus-visible:ring-2 focus-visible:ring-[#E5B87E] rounded-[10px] select-none touch-pan-y"
         style={{
-          height: coverTop + size + reflectionPx + 12,
+          height: coverTop + size + reflectionPx + (isRing ? 32 : 12),
+          // Clip sideways only, never top/bottom, so covers at the back of the ring are never cut
+          overflowX: 'clip',
+          overflowY: 'visible',
           perspective: isRing ? radius * 1.8 : size * 4,
           perspectiveOrigin: isRing ? `50% ${coverTop + size / 2}px` : undefined,
         }}
