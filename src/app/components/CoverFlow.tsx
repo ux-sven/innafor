@@ -9,6 +9,16 @@ export interface CoverFlowItem {
 }
 
 export interface CoverFlowSettings {
+  /** `coverflow` = flat row with angled sides, `ring` = covers travel around a horizontal 3D circle. */
+  mode: 'coverflow' | 'ring';
+  /** Ring: how tightly the covers sit around the circle (1 = edge to edge, lower = more overlap). */
+  ringSpacing: number;
+  /** Ring: minimum radius as a fraction of the available width (wider = more spread). */
+  ringWidth: number;
+  /** Ring: camera tilt in degrees – higher looks more down onto the circle. */
+  ringTilt: number;
+  /** Ring: cover size as a fraction of the available width – [mobile, desktop]. */
+  ringSizeRatio: [number, number];
   /** Rotation (deg) of the side covers. */
   rotation: number;
   /** Distance from the centre to the first side cover, as a fraction of the cover size. */
@@ -43,6 +53,11 @@ export interface CoverFlowSettings {
 }
 
 export const defaultCoverFlowSettings: CoverFlowSettings = {
+  mode: 'coverflow',
+  ringSpacing: 0.85,
+  ringWidth: 0.45,
+  ringTilt: 16,
+  ringSizeRatio: [0.46, 0.22],
   rotation: 45,
   centerGap: 0.72,
   spacing: 0.36,
@@ -101,9 +116,30 @@ export function CoverFlow({
     return () => ro.disconnect();
   }, []);
 
-  const ratio = width < 640 ? s.sizeRatio[0] : s.sizeRatio[1];
+  const isRing = s.mode === 'ring' && count > 2;
+  const ratios = isRing ? s.ringSizeRatio : s.sizeRatio;
+  const ratio = width < 640 ? ratios[0] : ratios[1];
   const size = Math.round(Math.min(s.maxSize, Math.max(s.minSize, width * ratio)));
   const reflectionPx = s.reflection ? Math.round(size * s.reflectionHeight) : 0;
+
+  // Ring geometry
+  const step = 360 / Math.max(count, 1);
+  const radius = Math.max(size * 1.1, width * s.ringWidth, (size * count * s.ringSpacing) / (2 * Math.PI));
+  const tiltRad = (s.ringTilt * Math.PI) / 180;
+  const ringLift = Math.round(radius * Math.sin(tiltRad) * 0.8); // room for the back of the ring
+  const coverTop = isRing ? 12 + ringLift : 12;
+
+  // Continuous rotation counter so the ring always turns the short way, also across the seam
+  const [turn, setTurn] = useState(active);
+  useLayoutEffect(() => {
+    setTurn((t) => {
+      const cur = ((Math.round(t) % count) + count) % count;
+      let delta = active - cur;
+      if (delta > count / 2) delta -= count;
+      if (delta < -count / 2) delta += count;
+      return t + delta;
+    });
+  }, [active, count]);
 
   // Whether the latest change came from autoplay (slow glide) or the user (quick)
   const [autoMove, setAutoMove] = useState(false);
@@ -177,16 +213,41 @@ export function CoverFlow({
 
   if (count === 0) return null;
 
-  const ms =
-    autoMove && s.autoplaySpeed > 0
-      ? Math.round(((size * s.centerGap) / s.autoplaySpeed) * 1000)
-      : s.duration;
+  // Distance the front cover travels in one step (arc on the ring, or the gap in coverflow)
+  const stepDistance = isRing ? (radius * step * Math.PI) / 180 : size * s.centerGap;
+  const ms = autoMove && s.autoplaySpeed > 0 ? Math.round((stepDistance / s.autoplaySpeed) * 1000) : s.duration;
   const easing = autoMove && s.autoplaySpeed > 0 ? 'cubic-bezier(0.45, 0, 0.55, 1)' : 'cubic-bezier(0.22, 0.61, 0.36, 1)';
   const transition = reducedMotion
     ? 'none'
     : `transform ${ms}ms ${easing}, opacity ${ms}ms ease, filter ${ms}ms ease`;
 
+  const ringRot = turn * step;
+  const ringContainerStyle: CSSProperties = {
+    transformStyle: 'preserve-3d',
+    transformOrigin: `50% ${coverTop + size / 2}px`,
+    transform: `translateY(${-radius * Math.sin(tiltRad)}px) translateZ(${-radius}px) rotateX(${-s.ringTilt}deg) rotateY(${-ringRot}deg)`,
+    transition: reducedMotion ? 'none' : `transform ${ms}ms ${easing}`,
+  };
+
+  const ringItemStyle = (i: number): CSSProperties => {
+    const theta = i * step;
+    // angle relative to the front, -180..180
+    let phi = (((theta - ringRot) % 360) + 540) % 360 - 180;
+    const facing = (Math.cos((phi * Math.PI) / 180) + 1) / 2; // 1 = front, 0 = back
+    const isFront = i === active;
+    return {
+      width: size,
+      marginLeft: -size / 2,
+      top: coverTop,
+      // place on the circle, then turn back towards the viewer (billboard) so covers stay readable
+      transform: `rotateY(${theta}deg) translateZ(${radius}px) rotateY(${ringRot - theta}deg) rotateX(${s.ringTilt}deg)`,
+      filter: isFront ? 'none' : `brightness(${(0.35 + 0.55 * Math.pow(facing, 1.2)).toFixed(3)})`,
+      transition,
+    };
+  };
+
   const itemStyle = (i: number): CSSProperties => {
+    if (isRing) return ringItemStyle(i);
     let d = i - active;
     if (s.loop && count > 2) {
       // shortest path around the ring
@@ -238,20 +299,24 @@ export function CoverFlow({
         onPointerUp={onPointerUp}
         onPointerCancel={() => (drag.current = null)}
         className="relative w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[#E5B87E] rounded-[10px] select-none touch-pan-y"
-        style={{ height: size + reflectionPx + 24, perspective: size * 4 }}
+        style={{
+          height: coverTop + size + reflectionPx + 12,
+          perspective: isRing ? radius * 1.8 : size * 4,
+          perspectiveOrigin: isRing ? `50% ${coverTop + size / 2}px` : undefined,
+        }}
       >
-        <div className="absolute inset-0" style={{ transformStyle: 'preserve-3d' }}>
+        <div className="absolute inset-0" style={isRing ? ringContainerStyle : { transformStyle: 'preserve-3d' }}>
           {items.map((item, i) => {
             const isActive = i === active;
             return (
               <div
                 key={item.id}
-                className="absolute left-1/2 top-3 cursor-pointer"
+                className={`absolute left-1/2 cursor-pointer ${isRing ? '' : 'top-3'}`}
                 style={itemStyle(i)}
                 role="group"
                 aria-roledescription="lysbilde"
                 aria-label={`${i + 1} av ${count}: ${item.title}`}
-                aria-hidden={Math.abs(i - active) > s.visibleSides}
+                aria-hidden={!isRing && Math.abs(i - active) > s.visibleSides}
                 onClick={() => {
                   if (suppressClick.current) { suppressClick.current = false; return; }
                   if (isActive && item.href) window.open(item.href, '_blank', 'noopener,noreferrer');
@@ -292,8 +357,8 @@ export function CoverFlow({
           })}
         </div>
 
-        <ArrowButton side="left" disabled={!canPrev} onClick={prev} top={12 + size / 2} />
-        <ArrowButton side="right" disabled={!canNext} onClick={next} top={12 + size / 2} />
+        <ArrowButton side="left" disabled={!canPrev} onClick={prev} top={coverTop + size / 2} />
+        <ArrowButton side="right" disabled={!canNext} onClick={next} top={coverTop + size / 2} />
       </div>
 
       {children && (
