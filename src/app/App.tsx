@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, RotateCcw } from 'lucide-react';
-import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { Gallery } from './components/Gallery';
 import { CoverFlow } from './components/CoverFlow';
 import { RELEASES_SPEED } from './motion';
@@ -337,13 +336,11 @@ export default function App() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const albumsResponse = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-ae52fa22/artist/${ARTIST_ID}/albums`,
-          { headers: { 'Authorization': `Bearer ${publicAnonKey}` } }
-        );
-
-        if (albumsResponse.ok) {
-          const albumsData = await albumsResponse.json();
+        // Releases are fetched at build time (scripts/fetch-releases.mjs) and served as a static
+        // file, so page views never call the rate-limited Spotify API.
+        const res = await fetch(`${import.meta.env.BASE_URL}releases.json`, { cache: 'no-cache' });
+        if (res.ok) {
+          const albumsData = await res.json();
           if (albumsData.items && albumsData.items.length > 0) {
             const sortedAlbums = [...albumsData.items].sort((a, b) => {
               const dateA = new Date(a.release_date || '1970-01-01');
