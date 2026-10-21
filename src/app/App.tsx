@@ -56,18 +56,33 @@ function SocialMediaLinks() {
   );
 }
 
-// Navigation Menu
+// Navigation Menu – order matches the order of the sections on the page
+const NAV_LINKS = [
+  { id: 'om', label: 'OM INNAFØR' },
+  { id: 'utgivelser', label: 'UTGIVELSER' },
+  { id: 'lytt', label: 'LYTT' },
+  { id: 'galleri', label: 'GALLERI' },
+  { id: 'kontakt', label: 'KONTAKT' },
+];
+
 function Navigation() {
   return (
     <div className="relative shrink-0 w-full">
       <div className="flex flex-row justify-center size-full">
-        <div className="content-stretch flex font-['Quicksand',sans-serif] font-bold items-start justify-between leading-normal px-[64px] relative size-full text-[#e7ab38] text-[16px] whitespace-nowrap">
-          <p className="relative shrink-0">OM INNAFØR</p>
-          <p className="relative shrink-0">LYTT</p>
-          <p className="relative shrink-0">UTGIVELSER</p>
-          <p className="relative shrink-0">GALLERI</p>
-          <p className="relative shrink-0">KONTAKT</p>
-        </div>
+        <nav aria-label="Hurtigmeny" className="w-full sm:px-[64px]">
+          <ul className="flex flex-wrap justify-center sm:justify-between gap-x-6 gap-y-2 font-['Quicksand',sans-serif] font-bold leading-normal text-[#e7ab38] text-[14px] sm:text-[16px] whitespace-nowrap">
+            {NAV_LINKS.map((link) => (
+              <li key={link.id}>
+                <a
+                  href={`#${link.id}`}
+                  className="rounded-sm transition-colors hover:text-[#f5d08a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5B87E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#020202]"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
     </div>
   );
@@ -81,7 +96,7 @@ function HeroSection() {
       <Navigation />
 
       {/* Image + Logo */}
-      <div className="content-center flex flex-wrap gap-[32px] items-center relative shrink-0 w-full">
+      <div id="om" className="scroll-mt-6 content-center flex flex-wrap gap-[32px] items-center relative shrink-0 w-full">
         <div className="h-[408px] relative rounded-br-[24px] rounded-tl-[24px] shrink-0 w-[339px]">
           <ImageWithFallback
             src={artistImg}
@@ -105,7 +120,7 @@ function HeroSection() {
 // Spotify Listen Section
 function SpotifySection() {
   return (
-    <div className="bg-[rgba(212,165,116,0.16)] content-stretch flex flex-col items-center relative shrink-0 w-full">
+    <section id="lytt" className="scroll-mt-0 bg-[rgba(212,165,116,0.16)] content-stretch flex flex-col items-center relative shrink-0 w-full">
       <div className="content-stretch flex flex-col items-start max-w-[800px] py-[62px] px-4 relative rounded-[16px] shrink-0 w-full">
         {/* Header */}
         <div className="content-stretch flex items-center justify-between relative w-full mb-6">
@@ -148,7 +163,7 @@ function SpotifySection() {
           />
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -254,7 +269,7 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
 // Footer
 function Footer() {
   return (
-    <div className="bg-[rgba(0,0,0,0.2)] content-stretch flex flex-col items-start pt-px relative shrink-0 w-full border-t border-[rgba(212,165,116,0.2)]">
+    <footer id="kontakt" className="bg-[rgba(0,0,0,0.2)] content-stretch flex flex-col items-start pt-px relative shrink-0 w-full border-t border-[rgba(212,165,116,0.2)]">
       <div className="max-w-[800px] relative shrink-0 w-full mx-auto">
         <div className="flex flex-row justify-center max-w-[inherit] size-full">
           <div className="content-stretch flex items-center justify-between max-w-[inherit] px-[16px] py-[32px] relative size-full">
@@ -297,7 +312,7 @@ function Footer() {
           </div>
         </div>
       </div>
-    </div>
+    </footer>
   );
 }
 
@@ -338,11 +353,13 @@ export default function App() {
   return (
     <div className="bg-[#020202] content-stretch flex flex-col items-center justify-end relative min-h-screen w-full">
       <HeroSection />
-      <LatestReleasesSection albums={albums} loading={loading} />
+      <section id="utgivelser" className="w-full flex flex-col items-center">
+        <LatestReleasesSection albums={albums} loading={loading} />
+      </section>
       <SpotifySection />
-      <div className="py-[32px] w-full">
+      <section id="galleri" className="py-[32px] w-full">
         <Gallery />
-      </div>
+      </section>
       <Footer />
     </div>
   );

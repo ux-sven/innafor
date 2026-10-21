@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 // Import alle galleribilder
@@ -27,6 +28,7 @@ interface GalleryItem {
 
 const GALLERY_HEIGHT = 400; // px
 const GAP = 8; // px
+const SPEED = 40; // px per second for the endless slide
 
 const galleryItems: GalleryItem[] = [
   {
@@ -158,23 +160,51 @@ export function Gallery() {
     }
   };
 
+  // Measure one set of images so the loop speed stays constant regardless of content width
+  const setRef = useRef<HTMLDivElement>(null);
+  const [duration, setDuration] = useState(90);
+  useEffect(() => {
+    const el = setRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setDuration(Math.max(20, el.offsetWidth / SPEED)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Two identical sets side by side; the track slides exactly one set width (-50%) and repeats.
+  // Each set carries its own trailing gap (pr-3) so the seam is seamless.
   return (
-    <div className="w-full overflow-hidden -mx-4 sm:-mx-8 lg:-mx-16">
-      {/* Full-width horizontal scrollable container */}
-      <div className="overflow-x-auto scrollbar-hide pb-4">
-        <div className="flex gap-3 w-fit px-4 sm:px-8 lg:px-16">
+    <div
+      className="gallery-marquee w-full overflow-hidden"
+      style={{
+        maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
+        WebkitMaskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)',
+      }}
+    >
+      <div className="gallery-track flex w-max" style={{ animationDuration: `${duration}s` }}>
+        <div ref={setRef} className="flex gap-3 pr-3">
+          {galleryItems.map((item, index) => renderItem(item, index))}
+        </div>
+        <div className="flex gap-3 pr-3" aria-hidden="true">
           {galleryItems.map((item, index) => renderItem(item, index))}
         </div>
       </div>
 
-      {/* Hide scrollbar */}
       <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
+        @keyframes gallery-slide {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
         }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+        .gallery-track {
+          animation: gallery-slide linear infinite;
+          will-change: transform;
+        }
+        .gallery-marquee:hover .gallery-track {
+          animation-play-state: paused;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .gallery-marquee { overflow-x: auto; }
+          .gallery-track { animation: none; }
         }
       `}</style>
     </div>
