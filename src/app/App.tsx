@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
+import { RotateCcw } from 'lucide-react';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { Gallery } from './components/Gallery';
 import { CoverFlow } from './components/CoverFlow';
 import { RELEASES_SPEED } from './motion';
 import { InnaforLogo } from './components/InnaforLogo';
-import { ImageWithFallback } from './components/figma/ImageWithFallback';
-import artistImg from '../imports/InnaforHomepageDesign/d7ee5821065e09df4529c5911acbd902b14e91c7.png';
 import svgPaths from '../imports/InnaforHomepageDesign/svg-i4i7dcnf9a';
 
 const ARTIST_ID = '6ZDSgSuMbJKVg91ZZL3tx6';
@@ -96,21 +95,14 @@ function HeroSection() {
       <SocialMediaLinks />
       <Navigation />
 
-      {/* Image + Logo */}
-      <div id="om" className="scroll-mt-6 content-center flex flex-wrap gap-[32px] items-center relative shrink-0 w-full">
-        <div className="h-[408px] relative rounded-br-[24px] rounded-tl-[24px] shrink-0 w-[339px]">
-          <ImageWithFallback
-            src={artistImg}
-            alt="INNAFØR artist"
-            className="absolute inset-0 max-w-none object-cover pointer-events-none rounded-br-[24px] rounded-tl-[24px] size-full"
-          />
-        </div>
+      {/* Logo */}
+      <div id="om" className="scroll-mt-6 flex justify-center w-full max-w-full">
         <InnaforLogo />
       </div>
 
       {/* Biography */}
       <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
-        <div className="font-['Quicksand',sans-serif] font-medium leading-[29.25px] relative shrink-0 text-[#d1d5dc] text-[18px] w-full">
+        <div className="font-['Quicksand',sans-serif] font-medium leading-[26px] relative shrink-0 text-[#d1d5dc] text-[15px] sm:text-[16px] w-full">
           <p>INNAFØR er musikken til Sven fra Bamble i Telemark – en låtskriver med hjerte i norsk country, bygderock og festmusikk. Med én fot i bygda og én i Oslo skrives det tekster om livet slik det faktisk er – ofte med humor og ironi, men alltid med en tvist av alvor innimellom. Kunstig intelligens brukes som et musikalsk verktøy for å gi låtene det lydbildet og uttrykket de fortjener. Enten det handler om prosecco-filosofi, påtvungen dugnadsfrivillighet, solbrenthet eller kjærlighet som kanskje ikke gikk så bra – målet er alltid det samme: å være innenfor, men akkurat på kanten.</p>
         </div>
       </div>
@@ -237,7 +229,18 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
   return (
     <div className="content-stretch flex flex-col items-center relative shrink-0 w-full">
       <div className="content-stretch flex flex-col gap-[32px] items-center max-w-[800px] pt-[62px] px-4 relative shrink-0 w-full">
-        <h2 className="font-['Inter',sans-serif] font-bold leading-[32px] text-[#e5b87e] text-[24px] tracking-[0.0703px] self-start">SISTE UTGIVELSER</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+          <h2 className="font-['Inter',sans-serif] font-bold leading-[32px] text-[#e5b87e] text-[24px] tracking-[0.0703px]">SISTE UTGIVELSER</h2>
+          <button
+            type="button"
+            onClick={() => setActiveIndex(0)}
+            disabled={activeIndex === 0}
+            className="inline-flex items-center gap-2 rounded-full border border-[rgba(212,165,116,0.35)] bg-[rgba(0,0,0,0.4)] px-4 py-2 font-['Inter',sans-serif] text-[14px] font-semibold text-[#E5B87E] transition hover:border-[#E5B87E] hover:bg-[rgba(229,184,126,0.1)] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5B87E]"
+          >
+            <RotateCcw className="size-4" aria-hidden />
+            Vis siste release
+          </button>
+        </div>
         {RELEASES_VARIANT === 'container' && carousel}
       </div>
       {RELEASES_VARIANT === 'full' && <div className="w-full max-w-[1200px] mt-[32px]">{carousel}</div>}

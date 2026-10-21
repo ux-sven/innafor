@@ -145,14 +145,16 @@ export function CoverFlow({
   }, [active, count]);
 
   // Whether the latest change came from autoplay (slow glide) or the user (quick)
-  const [autoMove, setAutoMove] = useState(false);
+  // (changes made from outside, e.g. a "show latest" button, count as user moves)
+  const [lastMove, setLastMove] = useState<{ index: number; auto: boolean }>({ index: -1, auto: false });
+  const autoMove = lastMove.auto && lastMove.index === active;
 
   const goTo = useCallback(
     (index: number, auto = false) => {
-      setAutoMove(auto);
       let next = index;
       if (s.loop) next = ((index % count) + count) % count;
       else next = Math.max(0, Math.min(count - 1, index));
+      setLastMove({ index: next, auto });
       if (controlledIndex === undefined) setInternalIndex(next);
       onActiveChange?.(next);
     },
