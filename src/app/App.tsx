@@ -338,8 +338,8 @@ export default function App() {
   return (
     <div className="bg-[#020202] content-stretch flex flex-col items-center justify-end relative min-h-screen w-full">
       <HeroSection />
-      <SpotifySection />
       <LatestReleasesSection albums={albums} loading={loading} />
+      <SpotifySection />
       <div className="py-[32px] w-full">
         <Gallery />
       </div>

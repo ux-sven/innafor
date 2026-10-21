@@ -29,6 +29,8 @@ export interface CoverFlowSettings {
   reflectionHeight: number;
   /** Animation duration in ms. */
   duration: number;
+  /** Auto-advance to the next cover after this many ms without interaction (0 = off). Pauses on hover/focus. */
+  autoplay: number;
   /** Jump from the last cover back to the first (and vice versa). */
   loop: boolean;
   /** Cover size as a fraction of the available width – [mobile, desktop]. */
@@ -49,6 +51,7 @@ export const defaultCoverFlowSettings: CoverFlowSettings = {
   reflectionOpacity: 0.3,
   reflectionHeight: 0.35,
   duration: 600,
+  autoplay: 10000,
   loop: false,
   sizeRatio: [0.58, 0.3],
   minSize: 150,
@@ -109,6 +112,15 @@ export function CoverFlow({
     },
     [count, s.loop, controlledIndex, onActiveChange],
   );
+
+  // Auto-advance. The timer restarts whenever the active cover changes,
+  // so any user navigation resets it. Wraps to the first cover at the end.
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (!s.autoplay || paused || count < 2) return;
+    const t = window.setTimeout(() => goTo(active >= count - 1 ? 0 : active + 1), s.autoplay);
+    return () => window.clearTimeout(t);
+  }, [active, paused, s.autoplay, count, goTo]);
 
   const prev = () => goTo(active - 1);
   const next = () => goTo(active + 1);
@@ -193,7 +205,16 @@ export function CoverFlow({
       : 'pt-4 pb-2';
 
   return (
-    <div className={`relative w-full ${frame} ${className}`}>
+    <div
+      className={`relative w-full ${frame} ${className}`}
+      // Pause while hovered with a mouse, or while keyboard-focused (not after a click/tap)
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setPaused(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && setPaused(false)}
+      onFocus={(e) => (e.target as HTMLElement).matches(':focus-visible') && setPaused(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setPaused(false);
+      }}
+    >
       <div
         ref={stageRef}
         role="region"
