@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { Gallery } from './components/Gallery';
+import { CoverFlow } from './components/CoverFlow';
 import { InnaforLogo } from './components/InnaforLogo';
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 import artistImg from '../imports/InnaforHomepageDesign/d7ee5821065e09df4529c5911acbd902b14e91c7.png';
@@ -152,7 +153,12 @@ function SpotifySection() {
 }
 
 // Latest Releases Section
+// Layout for the releases carousel: 'container' (framed card) or 'full' (edge-to-edge)
+const RELEASES_VARIANT: 'container' | 'full' = 'full';
+
 function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: boolean }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
   if (loading) {
     return (
       <div className="content-stretch flex flex-col items-center relative shrink-0 w-full">
@@ -169,77 +175,56 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
     return null;
   }
 
-  const latestAlbum = albums[0];
-  const olderAlbums = albums.slice(1, 10);
+  const releases = albums.slice(0, 15);
+  const active = releases[Math.min(activeIndex, releases.length - 1)];
+  const items = releases.map((a) => ({
+    id: a.id,
+    image: a.images[0]?.url,
+    title: a.name,
+    href: a.external_urls.spotify,
+  }));
+
+  const carousel = (
+    <CoverFlow
+      items={items}
+      variant={RELEASES_VARIANT}
+      activeIndex={activeIndex}
+      onActiveChange={setActiveIndex}
+      ariaLabel="Utgivelser"
+    >
+      <div key={active.id} className="flex flex-col items-center text-center gap-3 px-4 animate-in fade-in duration-500">
+        <p className="font-['Inter',sans-serif] font-normal leading-[16px] text-[#e5b87e] text-[12px] tracking-[0.6px] uppercase">
+          {activeIndex === 0 ? 'Nyeste • ' : ''}
+          {active.album_type === 'single' ? 'Singel' : active.album_type === 'compilation' ? 'Samling' : 'Album'} •{' '}
+          {new Date(active.release_date).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+        <h3 className="font-['Inter',sans-serif] font-bold leading-tight text-white text-[24px] sm:text-[30px] tracking-[0.3955px]">{active.name}</h3>
+        <p className="font-['Inter',sans-serif] font-normal leading-[24px] text-[#99a1af] text-[16px] tracking-[-0.3125px]">
+          {active.total_tracks} {active.total_tracks === 1 ? 'låt' : 'låter'}
+        </p>
+        <a
+          href={active.external_urls.spotify}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-[#1db954] hover:bg-[#1ed760] flex gap-[8px] items-center px-[24px] py-[12px] rounded-full transition-colors w-fit mt-1"
+        >
+          <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24" aria-hidden>
+            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+          </svg>
+          <span className="font-['Inter',sans-serif] font-semibold leading-[24px] text-white text-[16px] tracking-[-0.3125px] whitespace-nowrap">Lytt på Spotify</span>
+        </a>
+      </div>
+    </CoverFlow>
+  );
 
   return (
     <div className="content-stretch flex flex-col items-center relative shrink-0 w-full">
-      <div className="content-stretch flex flex-col gap-[32px] items-center max-w-[800px] py-[62px] px-4 relative shrink-0 w-full">
+      <div className="content-stretch flex flex-col gap-[32px] items-center max-w-[800px] pt-[62px] px-4 relative shrink-0 w-full">
         <h2 className="font-['Inter',sans-serif] font-bold leading-[32px] text-[#e5b87e] text-[24px] tracking-[0.0703px] self-start">SISTE UTGIVELSER</h2>
-
-        {/* Featured Latest Release */}
-        <div className="bg-[rgba(0,0,0,0.2)] relative rounded-[14px] shrink-0 w-full border border-[rgba(212,165,116,0.2)] p-[25px]">
-          <div className="flex gap-[24px] items-start">
-            <img
-              src={latestAlbum.images[0]?.url}
-              alt={latestAlbum.name}
-              className="w-[192px] h-[192px] rounded-[10px] shadow-[0px_20px_25px_0px_rgba(0,0,0,0.1),0px_8px_10px_0px_rgba(0,0,0,0.1)] object-cover"
-            />
-
-            <div className="flex-1 flex flex-col justify-between h-[192px]">
-              <div>
-                <p className="font-['Inter',sans-serif] font-normal leading-[16px] text-[#e5b87e] text-[12px] tracking-[0.6px] uppercase mb-2">
-                  {latestAlbum.album_type === 'single' ? 'Singel' : 'Album'} • {new Date(latestAlbum.release_date).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
-                </p>
-                <h3 className="font-['Inter',sans-serif] font-bold leading-[36px] text-white text-[30px] tracking-[0.3955px] mb-2">{latestAlbum.name}</h3>
-                <p className="font-['Inter',sans-serif] font-normal leading-[24px] text-[#99a1af] text-[16px] tracking-[-0.3125px]">
-                  {latestAlbum.total_tracks} {latestAlbum.total_tracks === 1 ? 'låt' : 'låter'}
-                </p>
-              </div>
-
-              <a
-                href={latestAlbum.external_urls.spotify}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#1db954] hover:bg-[#1ed760] flex gap-[8px] items-center px-[24px] py-[12px] rounded-full transition-colors w-fit"
-              >
-                <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24">
-                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                </svg>
-                <p className="font-['Inter',sans-serif] font-semibold leading-[24px] text-white text-[16px] tracking-[-0.3125px] whitespace-nowrap">Lytt på Spotify</p>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Older Releases Grid */}
-        {olderAlbums.length > 0 && (
-          <div className="w-full">
-            <h3 className="font-['Inter',sans-serif] font-semibold leading-[28px] text-[#e5b87e] text-[20px] tracking-[-0.4492px] mb-4">Tidligere utgivelser</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              {olderAlbums.map((album) => (
-                <a
-                  key={album.id}
-                  href={album.external_urls.spotify}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group"
-                >
-                  <div className="relative overflow-hidden rounded-[10px] mb-2">
-                    <img
-                      src={album.images[0]?.url}
-                      alt={album.name}
-                      className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <p className="font-['Inter',sans-serif] font-medium leading-[20px] text-white text-[14px] tracking-[-0.1504px] truncate group-hover:text-[#E5B87E] transition-colors">{album.name}</p>
-                  <p className="font-['Inter',sans-serif] font-normal leading-[16px] text-[#99a1af] text-[12px]">{new Date(album.release_date).getFullYear()}</p>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-
+        {RELEASES_VARIANT === 'container' && carousel}
+      </div>
+      {RELEASES_VARIANT === 'full' && <div className="w-full max-w-[1200px] mt-[32px]">{carousel}</div>}
+      <div className="content-stretch flex flex-col gap-[32px] items-center max-w-[800px] pt-[32px] pb-[62px] px-4 relative shrink-0 w-full">
         {/* See all songs link */}
         <div className="w-full text-center">
           <a
