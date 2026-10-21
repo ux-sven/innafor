@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { Gallery } from './components/Gallery';
 import { CoverFlow } from './components/CoverFlow';
+import { SLIDE_SPEED } from './motion';
 import { InnaforLogo } from './components/InnaforLogo';
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 import artistImg from '../imports/InnaforHomepageDesign/d7ee5821065e09df4529c5911acbd902b14e91c7.png';
@@ -203,6 +204,7 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
     <CoverFlow
       items={items}
       variant={RELEASES_VARIANT}
+      settings={{ loop: true, autoplaySpeed: SLIDE_SPEED }}
       activeIndex={activeIndex}
       onActiveChange={setActiveIndex}
       ariaLabel="Utgivelser"

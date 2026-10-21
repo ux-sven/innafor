@@ -31,7 +31,9 @@ export interface CoverFlowSettings {
   duration: number;
   /** Auto-advance to the next cover after this many ms without interaction (0 = off). Pauses on hover/focus. */
   autoplay: number;
-  /** Jump from the last cover back to the first (and vice versa). */
+  /** Speed (px/s) of the glide when auto-advancing, measured at the cover's centre. 0 = use `duration`. */
+  autoplaySpeed: number;
+  /** Endless loop: after the last cover comes the first (and vice versa). */
   loop: boolean;
   /** Cover size as a fraction of the available width – [mobile, desktop]. */
   sizeRatio: [number, number];
@@ -52,6 +54,7 @@ export const defaultCoverFlowSettings: CoverFlowSettings = {
   reflectionHeight: 0.35,
   duration: 600,
   autoplay: 10000,
+  autoplaySpeed: 0,
   loop: false,
   sizeRatio: [0.58, 0.3],
   minSize: 150,
@@ -102,8 +105,12 @@ export function CoverFlow({
   const size = Math.round(Math.min(s.maxSize, Math.max(s.minSize, width * ratio)));
   const reflectionPx = s.reflection ? Math.round(size * s.reflectionHeight) : 0;
 
+  // Whether the latest change came from autoplay (slow glide) or the user (quick)
+  const [autoMove, setAutoMove] = useState(false);
+
   const goTo = useCallback(
-    (index: number) => {
+    (index: number, auto = false) => {
+      setAutoMove(auto);
       let next = index;
       if (s.loop) next = ((index % count) + count) % count;
       else next = Math.max(0, Math.min(count - 1, index));
@@ -118,7 +125,7 @@ export function CoverFlow({
   const [paused, setPaused] = useState(false);
   useEffect(() => {
     if (!s.autoplay || paused || count < 2) return;
-    const t = window.setTimeout(() => goTo(active >= count - 1 ? 0 : active + 1), s.autoplay);
+    const t = window.setTimeout(() => goTo(active >= count - 1 ? 0 : active + 1, true), s.autoplay);
     return () => window.clearTimeout(t);
   }, [active, paused, s.autoplay, count, goTo]);
 
@@ -170,9 +177,14 @@ export function CoverFlow({
 
   if (count === 0) return null;
 
+  const ms =
+    autoMove && s.autoplaySpeed > 0
+      ? Math.round(((size * s.centerGap) / s.autoplaySpeed) * 1000)
+      : s.duration;
+  const easing = autoMove && s.autoplaySpeed > 0 ? 'cubic-bezier(0.45, 0, 0.55, 1)' : 'cubic-bezier(0.22, 0.61, 0.36, 1)';
   const transition = reducedMotion
     ? 'none'
-    : `transform ${s.duration}ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity ${s.duration}ms ease, filter ${s.duration}ms ease`;
+    : `transform ${ms}ms ${easing}, opacity ${ms}ms ease, filter ${ms}ms ease`;
 
   const itemStyle = (i: number): CSSProperties => {
     let d = i - active;

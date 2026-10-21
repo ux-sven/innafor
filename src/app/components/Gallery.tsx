@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { SLIDE_SPEED } from '../motion';
 
 // Import alle galleribilder
 import bobler from '../../imports/bobler_i_livet_4.jpg';
@@ -28,7 +29,7 @@ interface GalleryItem {
 
 const GALLERY_HEIGHT = 400; // px
 const GAP = 8; // px
-const SPEED = 40; // px per second for the endless slide
+const SPEED = SLIDE_SPEED; // px per second for the endless slide (shared with the releases carousel)
 
 const galleryItems: GalleryItem[] = [
   {
