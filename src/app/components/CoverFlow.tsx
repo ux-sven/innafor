@@ -129,7 +129,7 @@ export function CoverFlow({
   const minRingRadius = (size * Math.max(1, s.ringSpacing)) / (2 * Math.tan(Math.PI / Math.max(count, 3)));
   const radius = Math.max(minRingRadius, width * s.ringWidth);
   const tiltRad = (s.ringTilt * Math.PI) / 180;
-  const ringLift = Math.round(radius * Math.sin(tiltRad) * 2 + 40); // generous room above for the back of the ring
+  const ringLift = Math.round(radius * Math.sin(tiltRad) * 1.2 + 16); // room above for the back of the ring (top/bottom are never clipped)
   const coverTop = isRing ? 12 + ringLift : 12;
 
   // Continuous rotation counter so the ring always turns the short way, also across the seam

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RotateCcw } from 'lucide-react';
+import { ArrowUpRight, RotateCcw } from 'lucide-react';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { Gallery } from './components/Gallery';
 import { CoverFlow } from './components/CoverFlow';
@@ -201,27 +201,57 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
       onActiveChange={setActiveIndex}
       ariaLabel="Utgivelser"
     >
-      <div key={active.id} className="flex flex-col items-center text-center gap-3 px-4 animate-in fade-in duration-500">
-        <p className="font-['Inter',sans-serif] font-normal leading-[16px] text-[#e5b87e] text-[12px] tracking-[0.6px] uppercase">
-          {activeIndex === 0 ? 'Nyeste • ' : ''}
-          {active.album_type === 'single' ? 'Singel' : active.album_type === 'compilation' ? 'Samling' : 'Album'} •{' '}
-          {new Date(active.release_date).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
-        <h3 className="font-['Inter',sans-serif] font-bold leading-tight text-white text-[24px] sm:text-[30px] tracking-[0.3955px]">{active.name}</h3>
-        <p className="font-['Inter',sans-serif] font-normal leading-[24px] text-[#99a1af] text-[16px] tracking-[-0.3125px]">
-          {active.total_tracks} {active.total_tracks === 1 ? 'låt' : 'låter'}
-        </p>
-        <a
-          href={active.external_urls.spotify}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-[#1db954] hover:bg-[#1ed760] flex gap-[8px] items-center px-[24px] py-[12px] rounded-full transition-colors w-fit mt-1"
-        >
-          <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24" aria-hidden>
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-          <span className="font-['Inter',sans-serif] font-semibold leading-[24px] text-white text-[16px] tracking-[-0.3125px] whitespace-nowrap">Lytt på Spotify</span>
-        </a>
+      <div className="mx-auto w-full max-w-[860px] px-4">
+        <div className="relative overflow-hidden rounded-2xl border border-[rgba(212,165,116,0.22)] bg-gradient-to-r from-[rgba(229,184,126,0.08)] via-[rgba(255,255,255,0.02)] to-transparent px-5 py-4 sm:px-6 sm:py-5">
+          <div key={active.id} className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 animate-in fade-in slide-in-from-bottom-1 duration-500">
+            {/* Counter */}
+            <div className="hidden sm:flex flex-col items-center justify-center pr-6 border-r border-[rgba(212,165,116,0.22)] font-['Inter',sans-serif] tabular-nums">
+              <span className="text-[30px] font-bold leading-none text-[#E5B87E]">{String(activeIndex + 1).padStart(2, '0')}</span>
+              <span className="mt-1 text-[11px] font-medium tracking-[1px] text-[#6b7280]">/ {String(releases.length).padStart(2, '0')}</span>
+            </div>
+
+            {/* Meta + title */}
+            <div className="flex-1 min-w-0 text-center sm:text-left font-['Inter',sans-serif]">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2 gap-y-1 text-[11px] font-medium uppercase tracking-[1.2px] text-[#99a1af]">
+                {activeIndex === 0 && (
+                  <span className="rounded-full bg-[#E5B87E] px-2 py-[2px] text-[10px] font-bold tracking-[1px] text-black">Nyeste</span>
+                )}
+                <span className="text-[#E5B87E]">{active.album_type === 'single' ? 'Singel' : active.album_type === 'compilation' ? 'Samling' : 'Album'}</span>
+                <span aria-hidden className="size-1 rounded-full bg-[#4b5563]" />
+                <span>{new Date(active.release_date).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span aria-hidden className="size-1 rounded-full bg-[#4b5563]" />
+                <span>{active.total_tracks} {active.total_tracks === 1 ? 'låt' : 'låter'}</span>
+              </div>
+              <h3 className="mt-1.5 sm:truncate text-[22px] sm:text-[26px] font-bold leading-tight tracking-[0.2px] text-white" title={active.name}>
+                {active.name}
+              </h3>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap shrink-0 items-center justify-center gap-2">
+              <a
+                href={active.external_urls.spotify}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2.5 font-['Inter',sans-serif] text-[15px] font-semibold text-white whitespace-nowrap shadow-[0_8px_24px_-8px_rgba(29,185,84,0.6)] transition hover:bg-[#1ed760] hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <svg className="size-[18px]" fill="white" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
+                </svg>
+                Lytt på Spotify
+              </a>
+              <a
+                href={`https://open.spotify.com/artist/${ARTIST_ID}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(212,165,116,0.35)] px-4 py-2.5 font-['Inter',sans-serif] text-[14px] font-semibold text-[#E5B87E] whitespace-nowrap transition hover:border-[#E5B87E] hover:bg-[rgba(229,184,126,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5B87E]"
+              >
+                Alle sanger
+                <ArrowUpRight className="size-4" aria-hidden />
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </CoverFlow>
   );
@@ -244,29 +274,7 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
         {RELEASES_VARIANT === 'container' && carousel}
       </div>
       {RELEASES_VARIANT === 'full' && <div className="w-full max-w-[1200px] mt-[32px]">{carousel}</div>}
-      <div className="content-stretch flex flex-col gap-[32px] items-center max-w-[800px] pt-[32px] pb-[62px] px-4 relative shrink-0 w-full">
-        {/* See all songs link */}
-        <div className="w-full text-center">
-          <a
-            href={`https://open.spotify.com/artist/${ARTIST_ID}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex gap-[8px] items-center text-[#d4a574] hover:text-[#E5B87E] transition-colors"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <g clipPath="url(#clip0_38_278)">
-                <path d={svgPaths.p313c0100} />
-              </g>
-              <defs>
-                <clipPath id="clip0_38_278">
-                  <rect fill="white" height="20" width="20" />
-                </clipPath>
-              </defs>
-            </svg>
-            <p className="font-['Inter',sans-serif] font-normal leading-[20px] text-[14px] tracking-[-0.1504px]">Se alle sangene</p>
-          </a>
-        </div>
-      </div>
+      <div className="pb-[62px]" />
     </div>
   );
 }
