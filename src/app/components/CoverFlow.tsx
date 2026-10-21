@@ -56,7 +56,7 @@ export const defaultCoverFlowSettings: CoverFlowSettings = {
   mode: 'coverflow',
   ringSpacing: 0.85,
   ringWidth: 0.45,
-  ringTilt: 16,
+  ringTilt: 6,
   ringSizeRatio: [0.46, 0.22],
   rotation: 45,
   centerGap: 0.72,
@@ -239,8 +239,10 @@ export function CoverFlow({
       width: size,
       marginLeft: -size / 2,
       top: coverTop,
-      // place on the circle, then turn back towards the viewer (billboard) so covers stay readable
-      transform: `rotateY(${theta}deg) translateZ(${radius}px) rotateY(${ringRot - theta}deg) rotateX(${s.ringTilt}deg)`,
+      // Place on the circle facing outwards: covers turn edge-on at the sides and show
+      // their (mirrored) back when they pass behind.
+      transform: `rotateY(${theta}deg) translateZ(${radius}px)`,
+      backfaceVisibility: 'visible',
       filter: isFront ? 'none' : `brightness(${(0.35 + 0.55 * Math.pow(facing, 1.2)).toFixed(3)})`,
       transition,
     };
