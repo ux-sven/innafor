@@ -17,6 +17,9 @@ export interface CoverFlowSettings {
   ringWidth: number;
   /** Ring: camera tilt in degrees – higher looks more down onto the circle. */
   ringTilt: number;
+  /** Ring: max number of covers on the circle at once. With more items, the rest wait
+   *  hidden at the back and slide in as the ring turns, so the circle keeps its shape. */
+  ringSlots: number;
   /** Ring: cover size as a fraction of the available width – [mobile, desktop]. */
   ringSizeRatio: [number, number];
   /** Rotation (deg) of the side covers. */
@@ -57,6 +60,7 @@ export const defaultCoverFlowSettings: CoverFlowSettings = {
   ringSpacing: 1.04,
   ringWidth: 0.45,
   ringTilt: 4,
+  ringSlots: 12,
   ringSizeRatio: [0.46, 0.22],
   rotation: 45,
   centerGap: 0.72,
@@ -123,10 +127,12 @@ export function CoverFlow({
   const reflectionPx = s.reflection ? Math.round(size * s.reflectionHeight) : 0;
 
   // Ring geometry
-  const step = 360 / Math.max(count, 1);
+  const slots = Math.max(3, Math.min(count, s.ringSlots));
+  const windowed = count > slots; // more items than places on the ring
+  const step = 360 / slots;
   // Minimum radius where neighbouring covers sit edge to edge without cutting into each other
   // (the apothem of a regular polygon with `count` sides of length `size`).
-  const minRingRadius = (size * Math.max(1, s.ringSpacing)) / (2 * Math.tan(Math.PI / Math.max(count, 3)));
+  const minRingRadius = (size * Math.max(1, s.ringSpacing)) / (2 * Math.tan(Math.PI / slots));
   const radius = Math.max(minRingRadius, width * s.ringWidth);
   const tiltRad = (s.ringTilt * Math.PI) / 180;
   const ringLift = Math.round(radius * Math.sin(tiltRad) * 1.2 + 16); // room above for the back of the ring (top/bottom are never clipped)
@@ -234,8 +240,13 @@ export function CoverFlow({
     transition: reducedMotion ? 'none' : `transform ${ms}ms ${easing}`,
   };
 
+  // Position of item i on the (unrolled) ring closest to the current turn
+  const ringSlotOf = (i: number) => i + count * Math.round((turn - i) / count);
+  const ringHidden = (i: number) => windowed && Math.abs(ringSlotOf(i) - turn) > Math.floor((slots - 1) / 2);
+
   const ringItemStyle = (i: number): CSSProperties => {
-    const theta = i * step;
+    const theta = ringSlotOf(i) * step;
+    const hidden = ringHidden(i);
     // angle relative to the front, -180..180
     let phi = (((theta - ringRot) % 360) + 540) % 360 - 180;
     const facing = (Math.cos((phi * Math.PI) / 180) + 1) / 2; // 1 = front, 0 = back
@@ -249,7 +260,11 @@ export function CoverFlow({
       transform: `rotateY(${theta}deg) translateZ(${radius}px)`,
       backfaceVisibility: 'visible',
       filter: isFront ? 'none' : `brightness(${(0.35 + 0.55 * Math.pow(facing, 1.2)).toFixed(3)})`,
-      transition,
+      opacity: hidden ? 0 : 1,
+      pointerEvents: hidden ? 'none' : 'auto',
+      // The container does the turning; items only fade. Their own position only changes when a
+      // hidden item hops to its new place at the back, which must happen instantly.
+      transition: reducedMotion ? 'none' : `opacity ${ms}ms ease, filter ${ms}ms ease`,
     };
   };
 
@@ -326,7 +341,7 @@ export function CoverFlow({
                 role="group"
                 aria-roledescription="lysbilde"
                 aria-label={`${i + 1} av ${count}: ${item.title}`}
-                aria-hidden={!isRing && Math.abs(i - active) > s.visibleSides}
+                aria-hidden={isRing ? ringHidden(i) : Math.abs(i - active) > s.visibleSides}
                 onClick={() => {
                   if (suppressClick.current) { suppressClick.current = false; return; }
                   if (isActive && item.href) window.open(item.href, '_blank', 'noopener,noreferrer');

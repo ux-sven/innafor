@@ -182,7 +182,7 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
     return null;
   }
 
-  const releases = albums.slice(0, 15);
+  const releases = albums;
   const active = releases[Math.min(activeIndex, releases.length - 1)];
   const items = releases.map((a) => ({
     id: a.id,
