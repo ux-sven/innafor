@@ -3,6 +3,7 @@ import { ArrowUpRight, RotateCcw } from 'lucide-react';
 import { Gallery } from './components/Gallery';
 import { CoverFlow } from './components/CoverFlow';
 import { CookieConsent } from './components/CookieConsent';
+import { Merch } from './components/Merch';
 import { openCookieSettings, trackEvent } from './analytics';
 import { RELEASES_SPEED } from './motion';
 import { InnaforLogo } from './components/InnaforLogo';
@@ -68,6 +69,7 @@ function SocialMediaLinks() {
 const NAV_LINKS = [
   { id: 'om', label: 'OM INNAFØR' },
   { id: 'utgivelser', label: 'UTGIVELSER' },
+  { id: 'merch', label: 'MERCH' },
   { id: 'lytt', label: 'LYTT' },
   { id: 'galleri', label: 'GALLERI' },
   { id: 'kontakt', label: 'KONTAKT' },
@@ -126,7 +128,7 @@ function SpotifySection() {
     <section id="lytt" className="scroll-mt-0 bg-[rgba(212,165,116,0.16)] content-stretch flex flex-col items-center relative shrink-0 w-full">
       <div className="content-stretch flex flex-col items-start max-w-[800px] py-[62px] px-4 relative rounded-[16px] shrink-0 w-full">
         {/* Header */}
-        <div className="content-stretch flex items-center justify-between relative w-full mb-6">
+        <div className="content-stretch flex flex-wrap items-center justify-between gap-4 relative w-full mb-6">
           <div className="flex gap-[12px] items-center">
             <div className="relative shrink-0 size-[32px]">
               <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 32 32">
@@ -140,7 +142,7 @@ function SpotifySection() {
                 </defs>
               </svg>
             </div>
-            <p className="font-['Inter',sans-serif] font-bold leading-[36px] text-[#e5b87e] text-[30px] tracking-[0.3955px] whitespace-nowrap">Lytt på Spotify</p>
+            <p className="font-['Inter',sans-serif] font-bold leading-[36px] text-[#e5b87e] text-[26px] sm:text-[30px] tracking-[0.3955px] whitespace-nowrap">Lytt på Spotify</p>
           </div>
           <a
             href={`https://open.spotify.com/artist/${ARTIST_ID}`}
@@ -327,7 +329,7 @@ function Footer() {
     <footer id="kontakt" className="bg-[rgba(0,0,0,0.2)] content-stretch flex flex-col items-start pt-px relative shrink-0 w-full border-t border-[rgba(212,165,116,0.2)]">
       <div className="max-w-[800px] relative shrink-0 w-full mx-auto">
         <div className="flex flex-row justify-center max-w-[inherit] size-full">
-          <div className="content-stretch flex items-center justify-between max-w-[inherit] px-[16px] py-[32px] relative size-full">
+          <div className="content-stretch flex flex-wrap items-center justify-center sm:justify-between gap-6 max-w-[inherit] px-[16px] py-[32px] relative size-full">
             {/* Contact */}
             <div className="flex flex-col gap-2">
               <p className="font-['Inter',sans-serif] font-normal leading-[24px] text-[#99a1af] text-[16px] tracking-[-0.3125px] text-center">Kontakt meg</p>
@@ -419,6 +421,9 @@ export default function App() {
       <HeroSection />
       <section id="utgivelser" className="w-full flex flex-col items-center">
         <LatestReleasesSection albums={albums} loading={loading} />
+      </section>
+      <section id="merch" className="w-full scroll-mt-0 border-t border-[rgba(212,165,116,0.12)]">
+        <Merch />
       </section>
       <SpotifySection />
       <section id="galleri" className="py-[32px] w-full">
