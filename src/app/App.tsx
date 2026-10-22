@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { ArrowUpRight, RotateCcw } from 'lucide-react';
 import { Gallery } from './components/Gallery';
 import { CoverFlow } from './components/CoverFlow';
+import { CookieConsent } from './components/CookieConsent';
+import { openCookieSettings } from './analytics';
 import { RELEASES_SPEED } from './motion';
 import { InnaforLogo } from './components/InnaforLogo';
 import svgPaths from '../imports/InnaforHomepageDesign/svg-i4i7dcnf9a';
@@ -323,6 +325,17 @@ function Footer() {
             </a>
           </div>
         </div>
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-[rgba(212,165,116,0.1)] px-4 py-4 font-['Inter',sans-serif] text-[12px] text-[#6b7280]">
+          <span>© {new Date().getFullYear()} INNAFØR</span>
+          <span aria-hidden>·</span>
+          <button
+            type="button"
+            onClick={openCookieSettings}
+            className="underline underline-offset-2 hover:text-[#E5B87E] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5B87E] rounded-sm"
+          >
+            Cookie-innstillinger
+          </button>
+        </div>
       </div>
     </footer>
   );
@@ -371,6 +384,7 @@ export default function App() {
         <Gallery />
       </section>
       <Footer />
+      <CookieConsent />
     </div>
   );
 }
