@@ -82,3 +82,9 @@ function disableAnalytics() {
 export function openCookieSettings() {
   window.dispatchEvent(new Event(OPEN_SETTINGS_EVENT));
 }
+
+/** Sends a GA4 event – only if the visitor has accepted statistics. */
+export function trackEvent(name: string, params: Record<string, string | number | boolean | undefined> = {}) {
+  if (getConsent() !== 'granted' || !window.gtag) return;
+  window.gtag('event', name, params);
+}

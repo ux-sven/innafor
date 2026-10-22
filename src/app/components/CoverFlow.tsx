@@ -80,6 +80,8 @@ export const defaultCoverFlowSettings: CoverFlowSettings = {
   maxSize: 320,
 };
 
+export type NavigateMethod = 'arrow_next' | 'arrow_prev' | 'swipe' | 'scroll' | 'keyboard' | 'cover_click';
+
 interface CoverFlowProps {
   items: CoverFlowItem[];
   /** `container` = framed card, `full` = edge-to-edge without frame. */
@@ -87,6 +89,10 @@ interface CoverFlowProps {
   settings?: Partial<CoverFlowSettings>;
   activeIndex?: number;
   onActiveChange?: (index: number) => void;
+  /** Called when the user (not autoplay) moves the carousel. */
+  onNavigate?: (method: NavigateMethod, index: number) => void;
+  /** Called when the user opens the front item (clicks the centre cover). */
+  onOpenItem?: (item: CoverFlowItem, index: number) => void;
   /** Rendered under the covers, e.g. details about the active item. */
   children?: ReactNode;
   className?: string;
@@ -99,6 +105,8 @@ export function CoverFlow({
   settings: settingsOverride,
   activeIndex: controlledIndex,
   onActiveChange,
+  onNavigate,
+  onOpenItem,
   children,
   className = '',
   ariaLabel = 'Karusell',
@@ -156,15 +164,16 @@ export function CoverFlow({
   const autoMove = lastMove.auto && lastMove.index === active;
 
   const goTo = useCallback(
-    (index: number, auto = false) => {
+    (index: number, auto = false, method?: NavigateMethod) => {
       let next = index;
       if (s.loop) next = ((index % count) + count) % count;
       else next = Math.max(0, Math.min(count - 1, index));
       setLastMove({ index: next, auto });
       if (controlledIndex === undefined) setInternalIndex(next);
       onActiveChange?.(next);
+      if (!auto && method) onNavigate?.(method, next);
     },
-    [count, s.loop, controlledIndex, onActiveChange],
+    [count, s.loop, controlledIndex, onActiveChange, onNavigate],
   );
 
   // Auto-advance. The timer restarts whenever the active cover changes,
@@ -176,8 +185,8 @@ export function CoverFlow({
     return () => window.clearTimeout(t);
   }, [active, paused, s.autoplay, count, goTo]);
 
-  const prev = () => goTo(active - 1);
-  const next = () => goTo(active + 1);
+  const prev = () => goTo(active - 1, false, 'arrow_prev');
+  const next = () => goTo(active + 1, false, 'arrow_next');
   const canPrev = s.loop || active > 0;
   const canNext = s.loop || active < count - 1;
 
@@ -194,7 +203,7 @@ export function CoverFlow({
     if (Math.abs(dx) > 30) {
       suppressClick.current = true;
       const steps = Math.max(1, Math.round(Math.abs(dx) / (size * s.spacing * 1.5)));
-      goTo(active + (dx < 0 ? steps : -steps));
+      goTo(active + (dx < 0 ? steps : -steps), false, 'swipe');
     }
   };
 
@@ -209,17 +218,17 @@ export function CoverFlow({
       const now = Date.now();
       if (now - wheelLock.current < 180) return;
       wheelLock.current = now;
-      goTo(active + (e.deltaX > 0 ? 1 : -1));
+      goTo(active + (e.deltaX > 0 ? 1 : -1), false, 'scroll');
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
   }, [active, goTo]);
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
-    else if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
-    else if (e.key === 'Home') { e.preventDefault(); goTo(0); }
-    else if (e.key === 'End') { e.preventDefault(); goTo(count - 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(active - 1, false, 'keyboard'); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); goTo(active + 1, false, 'keyboard'); }
+    else if (e.key === 'Home') { e.preventDefault(); goTo(0, false, 'keyboard'); }
+    else if (e.key === 'End') { e.preventDefault(); goTo(count - 1, false, 'keyboard'); }
   };
 
   if (count === 0) return null;
@@ -344,8 +353,10 @@ export function CoverFlow({
                 aria-hidden={isRing ? ringHidden(i) : Math.abs(i - active) > s.visibleSides}
                 onClick={() => {
                   if (suppressClick.current) { suppressClick.current = false; return; }
-                  if (isActive && item.href) window.open(item.href, '_blank', 'noopener,noreferrer');
-                  else goTo(i);
+                  if (isActive && item.href) {
+                    onOpenItem?.(item, i);
+                    window.open(item.href, '_blank', 'noopener,noreferrer');
+                  } else goTo(i, false, 'cover_click');
                 }}
               >
                 <img

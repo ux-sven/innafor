@@ -3,7 +3,7 @@ import { ArrowUpRight, RotateCcw } from 'lucide-react';
 import { Gallery } from './components/Gallery';
 import { CoverFlow } from './components/CoverFlow';
 import { CookieConsent } from './components/CookieConsent';
-import { openCookieSettings } from './analytics';
+import { openCookieSettings, trackEvent } from './analytics';
 import { RELEASES_SPEED } from './motion';
 import { InnaforLogo } from './components/InnaforLogo';
 import svgPaths from '../imports/InnaforHomepageDesign/svg-i4i7dcnf9a';
@@ -49,7 +49,14 @@ function SocialMediaLinks() {
   return (
     <div className="content-stretch flex gap-[16px] items-start relative shrink-0">
       {socialLinks.map((link) => (
-        <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer">
+        <a
+          key={link.label}
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={link.label}
+          onClick={() => trackEvent('social_click', { platform: link.label, link_url: link.url })}
+        >
           <SocialIcon path={link.path} label={link.label} />
         </a>
       ))}
@@ -139,6 +146,7 @@ function SpotifySection() {
             href={`https://open.spotify.com/artist/${ARTIST_ID}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackEvent('spotify_artist_click', { location: 'lytt_section' })}
             className="bg-[#1db954] hover:bg-[#1ed760] h-[48px] px-6 flex items-center justify-center relative rounded-full shrink-0 transition-colors"
           >
             <p className="font-['Inter',sans-serif] font-semibold leading-[24px] text-white text-[16px] tracking-[-0.3125px] whitespace-nowrap">Følg på Spotify</p>
@@ -202,6 +210,21 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
       settings={{ mode: 'ring', loop: true, autoplaySpeed: RELEASES_SPEED }}
       activeIndex={activeIndex}
       onActiveChange={setActiveIndex}
+      onNavigate={(method, index) =>
+        trackEvent('release_carousel_navigate', {
+          method,
+          release_name: releases[index]?.name,
+          release_position: index + 1,
+        })
+      }
+      onOpenItem={(_, index) =>
+        trackEvent('release_open', {
+          source: 'cover',
+          release_name: releases[index]?.name,
+          release_id: releases[index]?.id,
+          release_position: index + 1,
+        })
+      }
       ariaLabel="Utgivelser"
     >
       <div className="mx-auto w-full max-w-[860px] px-4">
@@ -236,6 +259,14 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
                 href={active.external_urls.spotify}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() =>
+                  trackEvent('release_open', {
+                    source: 'spotify_button',
+                    release_name: active.name,
+                    release_id: active.id,
+                    release_position: activeIndex + 1,
+                  })
+                }
                 className="inline-flex items-center gap-2 rounded-full bg-[#1db954] px-5 py-2.5 font-['Inter',sans-serif] text-[15px] font-semibold text-white whitespace-nowrap shadow-[0_8px_24px_-8px_rgba(29,185,84,0.6)] transition hover:bg-[#1ed760] hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 <svg className="size-[18px]" fill="white" viewBox="0 0 24 24" aria-hidden>
@@ -247,6 +278,7 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
                 href={`https://open.spotify.com/artist/${ARTIST_ID}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackEvent('spotify_artist_click', { location: 'releases' })}
                 className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(212,165,116,0.35)] px-4 py-2.5 font-['Inter',sans-serif] text-[14px] font-semibold text-[#E5B87E] whitespace-nowrap transition hover:border-[#E5B87E] hover:bg-[rgba(229,184,126,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5B87E]"
               >
                 Alle sanger
@@ -266,7 +298,14 @@ function LatestReleasesSection({ albums, loading }: { albums: Album[]; loading: 
           <h2 className="font-['Inter',sans-serif] font-bold leading-[32px] text-[#e5b87e] text-[24px] tracking-[0.0703px]">SISTE UTGIVELSER</h2>
           <button
             type="button"
-            onClick={() => setActiveIndex(0)}
+            onClick={() => {
+              setActiveIndex(0);
+              trackEvent('release_carousel_navigate', {
+                method: 'latest_button',
+                release_name: releases[0]?.name,
+                release_position: 1,
+              });
+            }}
             disabled={activeIndex === 0}
             className="inline-flex items-center gap-2 rounded-full border border-[rgba(212,165,116,0.35)] bg-[rgba(0,0,0,0.4)] px-4 py-2 font-['Inter',sans-serif] text-[14px] font-semibold text-[#E5B87E] transition hover:border-[#E5B87E] hover:bg-[rgba(229,184,126,0.1)] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5B87E]"
           >
