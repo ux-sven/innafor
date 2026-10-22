@@ -93,13 +93,15 @@ function Navigation() {
 function HeroSection() {
   return (
     <div className="content-stretch flex flex-col gap-[32px] items-center max-w-[800px] py-[62px] px-4 relative shrink-0 w-full">
-      <SocialMediaLinks />
       <Navigation />
 
       {/* Logo */}
       <div id="om" className="scroll-mt-6 flex justify-center w-full max-w-full">
         <InnaforLogo />
       </div>
+
+      {/* Social links */}
+      <SocialMediaLinks />
 
       {/* Biography */}
       <div className="content-stretch flex flex-col items-start relative shrink-0 w-full">
