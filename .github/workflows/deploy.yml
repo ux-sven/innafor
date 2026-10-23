@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
   schedule:
-    # Refresh releases from Spotify every day at 06:17 UTC
-    - cron: '17 6 * * *'
+    # Look for new releases every 3 hours (GitHub may delay scheduled runs a bit)
+    - cron: '17 */3 * * *'
   workflow_dispatch:
 
 permissions:
